@@ -115,11 +115,12 @@ def main():
             except (json.JSONDecodeError, AttributeError):
                 character_name = "Unknown"
             
-            # Extract position data (avatar position) - as integers
+            # Extract position data (avatar position) - with 2 decimal places
             position_data = {
-                'x': int(ml.data.fAvatarPosition[0]),
-                'y': int(ml.data.fAvatarPosition[1]),
-                'z': int(ml.data.fAvatarPosition[2]),
+                'x': round(ml.data.fAvatarPosition[0], 2),
+                'y': round(ml.data.fAvatarPosition[1], 2),
+                'z': round(ml.data.fAvatarPosition[2], 2),
+                'mapId': ml.context.mapId,
                 'name': character_name,  # Use character name from identity JSON
                 'timestamp': datetime.now().isoformat()
             }
@@ -140,11 +141,12 @@ def main():
             
             # Only publish if position changed AND enough time has passed
             if position_changed and can_update:
-                # Prepare MQTT payload with integer coordinates
+                # Prepare MQTT payload with coordinates (2 decimals) and mapId
                 payload = json.dumps({
                     'x': position_data['x'],
                     'y': position_data['y'],
                     'z': position_data['z'],
+                    'mapId': position_data['mapId'],
                     'name': position_data['name'],
                     'color': 0x00ff00,  # Green color for marker
                     'timestamp': position_data['timestamp']
@@ -159,6 +161,7 @@ def main():
                     if update_count % 10 == 0:  # Print every 10 updates
                         print(f"Published position update #{update_count}: "
                               f"({position_data['x']}, {position_data['y']}, {position_data['z']}) "
+                              f"mapId:{position_data['mapId']} "
                               f"[{position_data['name']}]")
                 else:
                     print(f"Failed to publish message: {result.rc}")
