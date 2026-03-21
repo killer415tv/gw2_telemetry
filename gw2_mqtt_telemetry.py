@@ -19,7 +19,6 @@ from datetime import datetime
 # MQTT Settings
 MQTT_BROKER = "www.beetlerank.com"  # Your public MQTT server
 MQTT_PORT = 1883                    # Default MQTT port
-MQTT_TOPIC = "gw2/players/position" # Topic to publish position data
 MQTT_CLIENT_ID = f"gw2_player_{int(time.time())}"  # Unique client ID
 # MQTT_USERNAME = "your_username"   # Uncomment if needed
 # MQTT_PASSWORD = "your_password"   # Uncomment if needed
@@ -53,6 +52,16 @@ def on_publish(client, userdata, mid):
 def main():
     """Main application loop."""
     print("Starting GW2 MQTT Telemetry Client")
+    
+    # Ask for event code
+    event_code = input("Enter event code: ").strip()
+    if not event_code:
+        print("Error: Event code cannot be empty")
+        return
+    
+    # Build MQTT topic with event code
+    MQTT_TOPIC = f"/gw2/speedometer/race/{event_code}"
+    
     print(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
     print(f"Topic: {MQTT_TOPIC}")
     print(f"Min Update Interval: {MIN_UPDATE_INTERVAL}s")
@@ -121,7 +130,7 @@ def main():
                 'y': round(ml.data.fAvatarPosition[1], 2),
                 'z': round(ml.data.fAvatarPosition[2], 2),
                 'mapId': ml.context.mapId,
-                'name': character_name,  # Use character name from identity JSON
+                'user': character_name,  # Use character name from identity JSON
                 'timestamp': datetime.now().isoformat()
             }
             
@@ -147,7 +156,7 @@ def main():
                     'y': position_data['y'],
                     'z': position_data['z'],
                     'mapId': position_data['mapId'],
-                    'name': position_data['name'],
+                    'user': position_data['user'],
                     'color': 0x00ff00,  # Green color for marker
                     'timestamp': position_data['timestamp']
                 })
@@ -162,7 +171,7 @@ def main():
                         print(f"Published position update #{update_count}: "
                               f"({position_data['x']}, {position_data['y']}, {position_data['z']}) "
                               f"mapId:{position_data['mapId']} "
-                              f"[{position_data['name']}]")
+                              f"[{position_data['user']}]")
                 else:
                     print(f"Failed to publish message: {result.rc}")
                 
