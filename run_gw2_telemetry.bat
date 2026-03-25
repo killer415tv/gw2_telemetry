@@ -1,10 +1,9 @@
 @echo off
-REM GW2 MQTT Telemetry Launcher for Windows
-REM This script creates a virtual environment, installs dependencies, and runs the telemetry client
+REM GW2 UDP Telemetry Launcher for Windows
+REM This script creates a virtual environment and runs the telemetry client
 
 set SCRIPT_DIR=%~dp0
 set VENV_DIR=%SCRIPT_DIR%venv
-set REQUIREMENTS_FILE=%SCRIPT_DIR%gw2_mqtt_telemetry.py
 
 REM Check if Python is available
 where python >nul 2>&1
@@ -41,19 +40,10 @@ REM Install/upgrade pip
 echo Upgrading pip...
 python -m pip install --upgrade pip
 
-REM Install required packages
-echo Installing required packages...
-pip install paho-mqtt
-if errorlevel 1 (
-    echo Error: Failed to install required packages
-    pause
-    exit /b 1
-)
-
-REM Run the telemetry script
-echo Starting GW2 MQTT Telemetry Client...
+REM Run the telemetry script (no additional packages needed - uses built-in socket)
+echo Starting GW2 UDP Telemetry Client...
 echo.
-python "%SCRIPT_DIR%gw2_mqtt_telemetry.py"
+python "%SCRIPT_DIR%gw2_udp_telemetry.py"
 set ERROR_CODE=%errorlevel%
 
 REM Deactivate virtual environment
