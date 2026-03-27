@@ -22,6 +22,7 @@ UDP_PORT = 41234                 # UDP port (same as speedometer)
 
 # Update frequency (seconds)
 MIN_UPDATE_INTERVAL = 0.1   # Minimum time between updates (500ms) - won't send faster than this
+KEEPALIVE_INTERVAL = 2   # Send position every 2 seconds even if player hasn't moved (keepalive)
 
 # ======================
 # MAIN APPLICATION
@@ -40,6 +41,7 @@ def main():
     print(f"UDP Server: {UDP_HOST}:{UDP_PORT}")
     print(f"Session Code: {event_code}")
     print(f"Min Update Interval: {MIN_UPDATE_INTERVAL}s")
+    print(f"Keepalive Interval: {KEEPALIVE_INTERVAL}s")
     print("-" * 50)
     
     # Create UDP socket
@@ -106,8 +108,11 @@ def main():
             time_since_last_update = current_time - last_update_time
             can_update = time_since_last_update >= MIN_UPDATE_INTERVAL
             
-            # Only send if position changed AND enough time has passed
-            if position_changed and can_update:
+            # Check if keepalive timeout reached (send position every 5 minutes regardless of movement)
+            keepalive_reached = time_since_last_update >= KEEPALIVE_INTERVAL
+            
+            # Only send if position changed AND enough time has passed, OR keepalive timeout reached
+            if (position_changed and can_update) or keepalive_reached:
                 # Prepare UDP payload with position data
                 # Protocol compatible with speedometer.py
                 payload = {
@@ -129,11 +134,6 @@ def main():
                     udp_socket.sendto(json_data, (UDP_HOST, UDP_PORT))
                     
                     update_count += 1
-                    if update_count % 10 == 0:  # Print every 10 updates
-                        print(f"Sent position update #{update_count}: "
-                              f"({position_data['x']}, {position_data['y']}, {position_data['z']}) "
-                              f"mapId:{position_data['mapId']} "
-                              f"[{position_data['user']}]")
                 except Exception as e:
                     print(f"Failed to send UDP message: {e}")
                 
